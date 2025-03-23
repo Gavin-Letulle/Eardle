@@ -1,0 +1,83 @@
+html {
+  background-color: rgb(247, 236, 222);
+}
+
+body {
+  margin: 0;
+}
+
+.heading {
+  display: flex;
+  background: linear-gradient(to right, #73ff8f, #02dc2d);
+  flex-direction: row;
+  color: white;
+  font-size: 60px;
+  font-family: "DynaPuff", serif;
+  font-optical-sizing: auto;
+  font-weight: weight;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+  height: 120px;
+  border: 2px solid black;
+  gap: 45px;
+  text-shadow: 
+    -1.25px -1.25px 0 black,  
+    1.25px -1.25px 0 black,
+    -1.25px  1.25px 0 black,
+    1.25px  1.25px 0 black;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.content {
+  font-size: 16px;
+  color: black;
+  font-family: "DynaPuff", serif;
+  font-optical-sizing: auto;
+  font-weight: weight;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+  padding: 8px;
+}
+
+h1 {
+  font-size: 40px;
+  color: white;
+  text-shadow: 
+    -1.25px -1.25px 0 black,  
+    1.25px -1.25px 0 black,
+    -1.25px  1.25px 0 black,
+    1.25px  1.25px 0 black;
+  text-align: center;
+
+}
+
+#music-container {
+  border: 2px solid black;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: auto;
+  margin: 0 auto;
+  padding: 30px;
+  overflow: auto;
+}
+
+#music-output {
+  font-size: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: scale(1.5);
+  transform-origin: center;
+}
+
+#music-output svg {
+  pointer-events: auto !important;
+}

@@ -1,0 +1,108 @@
+<%- include('./partials/header') %>
+
+<h1 style="margin-top: 60px;">Guess the Melody!</h1>
+<div id="music-container">
+  <div id="music-output"></div>
+</div>
+
+<script>
+  VexFlow.loadFonts('Bravura', 'Academico').then(() => {
+    VexFlow.setFonts('Bravura', 'Academico');
+
+    const { Factory, EasyScore, Formatter } = VexFlow;
+
+    // Create VexFlow factory
+    const vf = new Factory({
+      renderer: { elementId: 'music-output', width: 700, height: 200 },
+    });
+
+    let noteStrings = []; // Store all notes added
+
+    // Notes available to click
+    const availableNotes = [
+      'C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4',
+      'C5', 'D5', 'E5', 'F5', 'G5'
+    ];
+
+    // Convert note name to vertical line (0 = bottom line, up by 0.5 per semitone)
+    function noteToLine(noteName) {
+      const letter = noteName[0].toUpperCase();
+      const octave = parseInt(noteName.slice(1), 10);
+      const letterValues = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+      const REFERENCE_MIDI = 64; // E4
+      const REFERENCE_LINE = 4;
+
+      const base = letterValues[letter] || 0;
+      const semitonesFromC4 = base + 12 * (octave - 4);
+      const midi = 60 + semitonesFromC4;
+
+      const offset = midi - REFERENCE_MIDI;
+      return REFERENCE_LINE - offset * 0.5;
+    }
+
+    // Get Y coordinate of note on stave
+    function getYForNote(stave, noteName) {
+      const line = noteToLine(noteName);
+      return stave.getYForLine(line);
+    }
+
+    // Initial draw (so we can grab stave and click coordinates)
+    let initialScore = vf.EasyScore();
+    let initialSystem = vf.System();
+    let initialStave = initialSystem
+      .addStave({ voices: [] })
+      .addClef('treble')
+      .addTimeSignature('4/4');
+    vf.draw();
+
+    // Attach click handler after draw
+    requestAnimationFrame(() => {
+      const svg = document.querySelector('#music-output svg');
+      svg.addEventListener('click', (e) => {
+        const svgRect = svg.getBoundingClientRect();
+        const clickY = e.clientY - svgRect.top;
+
+        // Find closest note
+        let closestNote = availableNotes[0];
+        let minDiff = Infinity;
+
+        for (const note of availableNotes) {
+          const y = getYForNote(initialStave, note);
+          const diff = Math.abs(y - clickY);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestNote = note;
+          }
+        }
+
+        const noteStr = `${closestNote}/q`;
+        noteStrings.push(noteStr);
+
+        // Redraw everything from scratch
+        vf.reset();
+        const score = vf.EasyScore();
+        const system = vf.System();
+
+        const notes = noteStrings.map(n => score.notes(n)).flat();
+        const voice = score.voice(notes, { time: '4/4' });
+        voice.setStrict(false);
+
+        system
+          .addStave({ voices: [voice] })
+          .addClef('treble')
+          .addTimeSignature('4/4');
+
+        const formatter = new Formatter();
+        formatter.format([voice], 600);
+
+        vf.draw();
+
+        // Save the updated stave to get new Y positions
+        initialStave = system.staves[0];
+      });
+    });
+  });
+</script>
+
+<%- include('./partials/footer') %>
