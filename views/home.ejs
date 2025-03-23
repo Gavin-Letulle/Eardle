@@ -62,11 +62,11 @@
       svg.addEventListener('click', (e) => {
         const svgRect = svg.getBoundingClientRect();
         const clickY = e.clientY - svgRect.top;
-
+      
         // Find closest note
         let closestNote = availableNotes[0];
         let minDiff = Infinity;
-
+      
         for (const note of availableNotes) {
           const y = getYForNote(initialStave, note);
           const diff = Math.abs(y - clickY);
@@ -75,32 +75,33 @@
             closestNote = note;
           }
         }
-
+      
         const noteStr = `${closestNote}/q`;
         noteStrings.push(noteStr);
-
-        // Redraw everything from scratch
+      
+        // Redraw everything
         vf.reset();
         const score = vf.EasyScore();
         const system = vf.System();
-
+      
         const notes = noteStrings.map(n => score.notes(n)).flat();
         const voice = score.voice(notes, { time: '4/4' });
         voice.setStrict(false);
-
-        system
+      
+        const newStave = system
           .addStave({ voices: [voice] })
           .addClef('treble')
           .addTimeSignature('4/4');
-
+      
         const formatter = new Formatter();
         formatter.format([voice], 600);
-
+      
         vf.draw();
-
-        // Save the updated stave to get new Y positions
-        initialStave = system.staves[0];
+      
+        // Save reference for Y-positioning next time
+        initialStave = newStave;
       });
+      
     });
   });
 </script>
