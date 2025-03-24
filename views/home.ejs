@@ -1,108 +1,133 @@
 <%- include('./partials/header') %>
 
 <h1 style="margin-top: 60px;">Guess the Melody!</h1>
-<div id="music-container">
-  <div id="music-output"></div>
+
+<div class="music-container">
+  <canvas id="staffCanvas" width="1050" height="420"></canvas>
 </div>
 
 <script>
-  VexFlow.loadFonts('Bravura', 'Academico').then(() => {
-    VexFlow.setFonts('Bravura', 'Academico');
+  const canvas = document.getElementById('staffCanvas');
+  const ctx = canvas.getContext('2d');
 
-    const { Factory, EasyScore, Formatter } = VexFlow;
+  const scale = 1.5;
 
-    // Create VexFlow factory
-    const vf = new Factory({
-      renderer: { elementId: 'music-output', width: 700, height: 200 },
-    });
+  const staffTop = 100 * scale;
+  const lineSpacing = 12 * scale;
+  const noteRadius = 6 * scale;
+  const noteXIncrement = 30 * scale;
+  const stemHeight = 35 * scale;
+  const lineLength = 20 * scale;
+  let noteX = 100 * scale;
 
-    let noteStrings = []; // Store all notes added
+  const noteList = [
+    'E6', 'D6', 'C6', 'B5', 'A5',
+    'G5', 'F5', 'E5', 'D5', 'C5',
+    'B4', 'A4', 'G4', 'F4', 'E4',
+    'D4', 'C4', 'B3', 'A3', 'G3',
+    'F3', 'E3'
+  ];
 
-    // Notes available to click
-    const availableNotes = [
-      'C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4',
-      'C5', 'D5', 'E5', 'F5', 'G5'
-    ];
+  const topStaffNote = 'G5';
+  const bottomStaffNote = 'E4';
 
-    // Convert note name to vertical line (0 = bottom line, up by 0.5 per semitone)
-    function noteToLine(noteName) {
-      const letter = noteName[0].toUpperCase();
-      const octave = parseInt(noteName.slice(1), 10);
-      const letterValues = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  const clefImg = new Image();
+  clefImg.src = '/images/trebel-clef.webp';
+  clefImg.onload = () => {
+    drawStaff();
+  };
 
-      const REFERENCE_MIDI = 64; // E4
-      const REFERENCE_LINE = 4;
+  function drawStaff() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'black';
 
-      const base = letterValues[letter] || 0;
-      const semitonesFromC4 = base + 12 * (octave - 4);
-      const midi = 60 + semitonesFromC4;
+    const topLineY = getYForNote('G5') + 5 * scale;
 
-      const offset = midi - REFERENCE_MIDI;
-      return REFERENCE_LINE - offset * 0.5;
+    for (let i = 0; i < 5; i++) {
+      const y = topLineY + i * lineSpacing;
+      ctx.beginPath();
+      ctx.moveTo(20 * scale, y);
+      ctx.lineTo(canvas.width - 20 * scale, y);
+      ctx.stroke();
     }
 
-    // Get Y coordinate of note on stave
-    function getYForNote(stave, noteName) {
-      const line = noteToLine(noteName);
-      return stave.getYForLine(line);
+    const clefScale = 1.4;
+    const clefHeight = lineSpacing * 4.5 * clefScale;
+    const clefWidth = clefHeight * 0.65;
+    const clefY = getYForNote('G4') - clefHeight * 0.56;
+
+ctx.drawImage(clefImg, 20, clefY -5, clefWidth, clefHeight);
+  }
+
+  function getNoteFromY(y) {
+    const totalSteps = noteList.length - 1;
+    const index = Math.round((y - staffTop) / (lineSpacing / 2));
+    const clampedIndex = Math.max(0, Math.min(totalSteps, index));
+    return noteList[clampedIndex];
+  }
+
+  function getYForNote(note) {
+    const index = noteList.indexOf(note);
+    return staffTop + index * (lineSpacing / 2);
+  }
+
+  function drawNote(x, note) {
+    const y = getYForNote(note);
+
+    ctx.beginPath();
+    ctx.arc(x, y, noteRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = 'black';
+    ctx.fill();
+
+    const middleLineY = getYForNote('B4');
+
+    ctx.beginPath();
+    if (y > middleLineY) {
+      ctx.moveTo(x + noteRadius, y);
+      ctx.lineTo(x + noteRadius, y - stemHeight);
+    } else {
+      ctx.moveTo(x - noteRadius, y);
+      ctx.lineTo(x - noteRadius, y + stemHeight);
     }
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
-    // Initial draw (so we can grab stave and click coordinates)
-    let initialScore = vf.EasyScore();
-    let initialSystem = vf.System();
-    let initialStave = initialSystem
-      .addStave({ voices: [] })
-      .addClef('treble')
-      .addTimeSignature('4/4');
-    vf.draw();
+    const noteIndex = noteList.indexOf(note);
+    const topIndex = noteList.indexOf(topStaffNote);
+    const bottomIndex = noteList.indexOf(bottomStaffNote);
 
-    // Attach click handler after draw
-    requestAnimationFrame(() => {
-      const svg = document.querySelector('#music-output svg');
-      svg.addEventListener('click', (e) => {
-        const svgRect = svg.getBoundingClientRect();
-        const clickY = e.clientY - svgRect.top;
-      
-        // Find closest note
-        let closestNote = availableNotes[0];
-        let minDiff = Infinity;
-      
-        for (const note of availableNotes) {
-          const y = getYForNote(initialStave, note);
-          const diff = Math.abs(y - clickY);
-          if (diff < minDiff) {
-            minDiff = diff;
-            closestNote = note;
-          }
-        }
-      
-        const noteStr = `${closestNote}/q`;
-        noteStrings.push(noteStr);
-      
-        // Redraw everything
-        vf.reset();
-        const score = vf.EasyScore();
-        const system = vf.System();
-      
-        const notes = noteStrings.map(n => score.notes(n)).flat();
-        const voice = score.voice(notes, { time: '4/4' });
-        voice.setStrict(false);
-      
-        const newStave = system
-          .addStave({ voices: [voice] })
-          .addClef('treble')
-          .addTimeSignature('4/4');
-      
-        const formatter = new Formatter();
-        formatter.format([voice], 600);
-      
-        vf.draw();
-      
-        // Save reference for Y-positioning next time
-        initialStave = newStave;
-      });
-      
-    });
+    if (noteIndex < topIndex) {
+      for (let i = topIndex - 1; i >= noteIndex; i -= 2) {
+        const lineY = getYForNote(noteList[i]);
+        ctx.beginPath();
+        ctx.moveTo(x - lineLength / 2, lineY);
+        ctx.lineTo(x + lineLength / 2, lineY);
+        ctx.stroke();
+      }
+    } else if (noteIndex > bottomIndex) {
+      for (let i = bottomIndex + 2; i <= noteIndex; i += 2) {
+        const lineY = getYForNote(noteList[i]);
+        ctx.beginPath();
+        ctx.moveTo(x - lineLength / 2, lineY);
+        ctx.lineTo(x + lineLength / 2, lineY);
+        ctx.stroke();
+      }
+    }
+  }
+
+  const synth = new Tone.Synth().toDestination();
+
+  canvas.addEventListener('click', async (e) => {
+    await Tone.start();
+    const rect = canvas.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const note = getNoteFromY(y);
+
+    drawNote(noteX, note);
+    noteX += noteXIncrement;
+
+    synth.triggerAttackRelease(note, "8n");
   });
 </script>
 
