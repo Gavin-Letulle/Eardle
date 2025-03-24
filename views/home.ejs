@@ -36,21 +36,28 @@
   const totalSlots = 19;
   const startX = 100 * scale;
   for (let i = 0; i < totalSlots; i++) {
-    noteSlots.push({ x: startX + i * noteXIncrement, filled: false, note: null });
+    noteSlots.push({
+      x: startX + i * noteXIncrement,
+      filled: false,
+      note: null,
+      color: null,
+      locked: false
+    });
   }
-
-  const clefImg = new Image();
-  clefImg.src = '/images/trebel-clef.webp';
-  clefImg.onload = () => {
-    // Place first note (C4) at the beginning before any user action
-    noteSlots[guessStartIndex - 1].filled = true;
-    noteSlots[guessStartIndex - 1].note = answerMelody[0];
-    drawStaff();
-  };
 
   const synth = new Tone.Synth().toDestination();
   const answerMelody = ['C4', 'D4', 'E4', 'C4'];
   const guessStartIndex = 1;
+
+  const clefImg = new Image();
+  clefImg.src = '/images/trebel-clef.webp';
+  clefImg.onload = () => {
+    noteSlots[guessStartIndex - 1].filled = true;
+    noteSlots[guessStartIndex - 1].note = answerMelody[0];
+    noteSlots[guessStartIndex - 1].color = 'black';
+    noteSlots[guessStartIndex - 1].locked = true;
+    drawStaff();
+  };
 
   function getYForNote(note) {
     const index = noteList.indexOf(note);
@@ -65,9 +72,12 @@
 
   function drawNote(x, note) {
     const y = getYForNote(note);
+    const slot = noteSlots.find(s => s.x === x);
+    const fillColor = slot?.color || 'black';
+
     ctx.beginPath();
     ctx.arc(x, y, noteRadius, 0, 2 * Math.PI);
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = fillColor;
     ctx.fill();
 
     const middleLineY = getYForNote('B4');
@@ -106,23 +116,14 @@
   }
 
   function colorNote(x, note, color) {
-    const y = getYForNote(note);
-    ctx.beginPath();
-    ctx.arc(x, y, noteRadius, 0, 2 * Math.PI);
-    ctx.fillStyle = color;
-    ctx.fill();
-
-    ctx.beginPath();
-    if (y > getYForNote('B4')) {
-      ctx.moveTo(x + noteRadius, y);
-      ctx.lineTo(x + noteRadius, y - stemHeight);
-    } else {
-      ctx.moveTo(x - noteRadius, y);
-      ctx.lineTo(x - noteRadius, y + stemHeight);
+    const slot = noteSlots.find(s => s.x === x);
+    if (slot) {
+      slot.color = color;
+      if (color === 'green') {
+        slot.locked = true;
+      }
     }
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    drawStaff();
   }
 
   function drawStaff() {
@@ -157,22 +158,32 @@
 
     for (let i = guessStartIndex; i < guessStartIndex + 3; i++) {
       const slot = noteSlots[i];
+      if (slot.locked) continue;
+
       if (Math.abs(clickX - slot.x) < noteXIncrement / 2) {
-        if (slot.filled) {
-          const noteY = getYForNote(slot.note);
-          if (Math.abs(clickY - noteY) < noteRadius * 2) {
-            slot.filled = false;
-            slot.note = null;
-            drawStaff();
-            return;
-          }
-          slot.note = clickedNote;
+        const previousNote = slot.note;
+        const previousY = previousNote ? getYForNote(previousNote) : null;
+        const clickedY = getYForNote(clickedNote);
+
+        // Remove if same note clicked
+        if (slot.filled && Math.abs(clickedY - previousY) < noteRadius * 2) {
+          slot.filled = false;
+          slot.note = null;
+          slot.color = null;
           drawStaff();
-          synth.triggerAttackRelease(clickedNote, "8n");
           return;
         }
+
+        // Update note
         slot.filled = true;
         slot.note = clickedNote;
+
+        if (slot.color === 'gold' && previousNote === clickedNote && Math.abs(clickedY - previousY) < 1) {
+          slot.color = 'gold'; // keep yellow
+        } else {
+          slot.color = null;   // otherwise reset to black
+        }
+
         drawStaff();
         synth.triggerAttackRelease(clickedNote, "8n");
         return;

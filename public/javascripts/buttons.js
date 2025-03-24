@@ -1,35 +1,62 @@
-
-  document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
     const listenButton = document.getElementById("listen-button");
     const guessButton = document.getElementById("guess-button");
+    const triesDisplay = document.querySelector('.tries-guess p');
+
+    let listenLocked = false;
+    let triesLeft = 5;
+    let gameOver = false;
+
+    function checkForWin() {
+      for (let i = 0; i < 4; i++) {
+        const slot = noteSlots[guessStartIndex - 1 + i];
+        if (!slot || slot.color !== 'green') return false;
+      }
+      return true;
+    }
+
+    function disableButtons(win = false) {
+      gameOver = true;
+      listenButton.disabled = true;
+      guessButton.disabled = true;
+      listenButton.style.cursor = 'not-allowed';
+      guessButton.style.cursor = 'not-allowed';
+
+      const color = win ? '#79e67d' : '#999';
+      listenButton.style.backgroundColor = color;
+      guessButton.style.backgroundColor = color;
+    }
 
     if (listenButton) {
       listenButton.addEventListener('click', async function () {
+        if (listenLocked || gameOver) return;
+
+        listenLocked = true;
         listenButton.style.backgroundColor = '#f57979';
-        listenButton.style.cursor = 'default';
+        listenButton.style.cursor = 'not-allowed';
+        listenButton.disabled = true;
+
         await Tone.start();
 
-        // Play melody
         for (let i = 0; i < answerMelody.length; i++) {
           synth.triggerAttackRelease(answerMelody[i], '8n', Tone.now() + i * 0.5);
         }
 
-        //Reset board and set first note
-        for (let slot of noteSlots) {
-          slot.filled = false;
-          slot.note = null;
-        }
-        noteSlots[guessStartIndex - 1].filled = true;
-        noteSlots[guessStartIndex - 1].note = answerMelody[0];
         drawStaff();
       });
     }
 
     if (guessButton) {
       guessButton.addEventListener('click', function () {
+        if (gameOver) return;
+
+        // Unlock listen button
+        listenLocked = false;
+        listenButton.disabled = false;
         listenButton.style.backgroundColor = '#ffc74f';
         listenButton.style.cursor = 'pointer';
 
+        // Color guesses
         for (let i = 1; i <= 3; i++) {
           const slot = noteSlots[guessStartIndex - 1 + i];
           const expected = answerMelody[i];
@@ -46,6 +73,24 @@
             colorNote(slot.x, slot.note, 'red');
           }
         }
+
+        // ✅ Check for win after coloring
+        setTimeout(() => {
+          if (checkForWin()) {
+            triesDisplay.textContent = "🎉 You Win!";
+            disableButtons(true);
+            return;
+          }
+
+          // Decrease tries if not won
+          triesLeft--;
+          if (triesLeft <= 0) {
+            triesDisplay.textContent = "Game Over!";
+            disableButtons();
+          } else {
+            triesDisplay.textContent = `Tries Left: ${triesLeft}`;
+          }
+        }, 50); // slight delay ensures DOM updates finish
       });
     }
   });
