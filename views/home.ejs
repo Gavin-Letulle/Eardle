@@ -1,22 +1,18 @@
 <%- include('./partials/header') %>
 <div class="home">
   <h1 style="margin-top: 60px;">Guess the Melody!</h1>
-  <button id="listen-button">
-    Listen
-  </button>
+  <button id="listen-button">Listen</button>
   <div class="music-container">
     <canvas id="staffCanvas" width="1050" height="300"></canvas>
   </div>
-  <div class = "tries-guess">
+  <div class="tries-guess">
     <p style="font-size: 20px">Tries Left: 5</p>
-    <button id="guess-button">
-      Guess
-    </button>
+    <button id="guess-button">Guess</button>
   </div>
 </div>
+
 <script>
   const canvas = document.getElementById('staffCanvas');
-  const musicContainer = document.querySelector('.music-container');
   const ctx = canvas.getContext('2d');
 
   const scale = 1.5;
@@ -28,10 +24,8 @@
   const lineLength = 20 * scale;
 
   const noteList = [
-    'E6', 'D6', 'C6', 'B5', 'A5',
-    'G5', 'F5', 'E5', 'D5', 'C5',
-    'B4', 'A4', 'G4', 'F4', 'E4',
-    'D4', 'C4', 'B3', 'A3', 'G3',
+    'E6', 'D6', 'C6', 'B5', 'A5', 'G5', 'F5', 'E5', 'D5', 'C5',
+    'B4', 'A4', 'G4', 'F4', 'E4', 'D4', 'C4', 'B3', 'A3', 'G3',
     'F3', 'E3'
   ];
 
@@ -41,72 +35,42 @@
   const noteSlots = [];
   const totalSlots = 19;
   const startX = 100 * scale;
-
   for (let i = 0; i < totalSlots; i++) {
-    noteSlots.push({
-      x: startX + i * noteXIncrement,
-      filled: false,
-      note: null
-    });
+    noteSlots.push({ x: startX + i * noteXIncrement, filled: false, note: null });
   }
 
   const clefImg = new Image();
   clefImg.src = '/images/trebel-clef.webp';
   clefImg.onload = () => {
+    // Place first note (C4) at the beginning before any user action
+    noteSlots[guessStartIndex - 1].filled = true;
+    noteSlots[guessStartIndex - 1].note = answerMelody[0];
     drawStaff();
   };
 
-  function drawStaff() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = 'black';
-
-    const topLineY = getYForNote('G5') + 5 * scale;
-
-    for (let i = 0; i < 5; i++) {
-      const y = topLineY + i * lineSpacing;
-      ctx.beginPath();
-      ctx.moveTo(20 * scale, y);
-      ctx.lineTo(canvas.width - 20 * scale, y);
-      ctx.stroke();
-    }
-
-    const clefScale = 1.4;
-    const clefHeight = lineSpacing * 4.5 * clefScale;
-    const clefWidth = clefHeight * 0.65;
-    const clefY = getYForNote('G4') - clefHeight * 0.56;
-
-    ctx.drawImage(clefImg, 20, clefY - 5, clefWidth, clefHeight);
-
-    // Redraw notes on staff
-    for (let slot of noteSlots) {
-      if (slot.filled) {
-        drawNote(slot.x, slot.note);
-      }
-    }
-  }
-
-  function getNoteFromY(y) {
-    const totalSteps = noteList.length - 1;
-    const index = Math.round((y - staffTop) / (lineSpacing / 2));
-    const clampedIndex = Math.max(0, Math.min(totalSteps, index));
-    return noteList[clampedIndex];
-  }
+  const synth = new Tone.Synth().toDestination();
+  const answerMelody = ['C4', 'D4', 'E4', 'C4'];
+  const guessStartIndex = 1;
 
   function getYForNote(note) {
     const index = noteList.indexOf(note);
     return staffTop + index * (lineSpacing / 2);
   }
 
+  function getNoteFromY(y) {
+    const totalSteps = noteList.length - 1;
+    const index = Math.round((y - staffTop) / (lineSpacing / 2));
+    return noteList[Math.max(0, Math.min(totalSteps, index))];
+  }
+
   function drawNote(x, note) {
     const y = getYForNote(note);
-
     ctx.beginPath();
     ctx.arc(x, y, noteRadius, 0, 2 * Math.PI);
     ctx.fillStyle = 'black';
     ctx.fill();
 
     const middleLineY = getYForNote('B4');
-
     ctx.beginPath();
     if (y > middleLineY) {
       ctx.moveTo(x + noteRadius, y);
@@ -122,7 +86,6 @@
     const noteIndex = noteList.indexOf(note);
     const topIndex = noteList.indexOf(topStaffNote);
     const bottomIndex = noteList.indexOf(bottomStaffNote);
-
     if (noteIndex < topIndex) {
       for (let i = topIndex - 1; i >= noteIndex; i -= 2) {
         const lineY = getYForNote(noteList[i]);
@@ -142,43 +105,72 @@
     }
   }
 
-  const synth = new Tone.Synth().toDestination();
+  function colorNote(x, note, color) {
+    const y = getYForNote(note);
+    ctx.beginPath();
+    ctx.arc(x, y, noteRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    ctx.beginPath();
+    if (y > getYForNote('B4')) {
+      ctx.moveTo(x + noteRadius, y);
+      ctx.lineTo(x + noteRadius, y - stemHeight);
+    } else {
+      ctx.moveTo(x - noteRadius, y);
+      ctx.lineTo(x - noteRadius, y + stemHeight);
+    }
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  function drawStaff() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'black';
+
+    const topLineY = getYForNote('G5') + 5 * scale;
+    for (let i = 0; i < 5; i++) {
+      const y = topLineY + i * lineSpacing;
+      ctx.beginPath();
+      ctx.moveTo(20 * scale, y);
+      ctx.lineTo(canvas.width - 20 * scale, y);
+      ctx.stroke();
+    }
+
+    const clefScale = 1.4;
+    const clefHeight = lineSpacing * 4.5 * clefScale;
+    const clefWidth = clefHeight * 0.65;
+    const clefY = getYForNote('G4') - clefHeight * 0.56;
+    ctx.drawImage(clefImg, 20, clefY - 5, clefWidth, clefHeight);
+
+    for (let slot of noteSlots) {
+      if (slot.filled) drawNote(slot.x, slot.note);
+    }
+  }
 
   canvas.addEventListener('click', async (e) => {
-    const isInsideContainer = document.elementFromPoint(e.clientX, e.clientY)?.closest('.music-container');
-    if (!isInsideContainer) return;
-  
-    await Tone.start();
     const rect = canvas.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
     const clickedNote = getNoteFromY(clickY);
-  
-    for (let slot of noteSlots) {
-      const slotRange = noteXIncrement / 2;
-  
-      // If the click is close to this slot's X position
-      if (Math.abs(clickX - slot.x) < slotRange) {
-        // If there's already a note here
+
+    for (let i = guessStartIndex; i < guessStartIndex + 3; i++) {
+      const slot = noteSlots[i];
+      if (Math.abs(clickX - slot.x) < noteXIncrement / 2) {
         if (slot.filled) {
           const noteY = getYForNote(slot.note);
-  
-          // If the user clicked near the existing note head, remove it
           if (Math.abs(clickY - noteY) < noteRadius * 2) {
             slot.filled = false;
             slot.note = null;
             drawStaff();
             return;
           }
-  
-          // Otherwise, update the note pitch
           slot.note = clickedNote;
           drawStaff();
           synth.triggerAttackRelease(clickedNote, "8n");
           return;
         }
-  
-        // If empty slot, place a new note
         slot.filled = true;
         slot.note = clickedNote;
         drawStaff();
