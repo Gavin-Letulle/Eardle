@@ -49,17 +49,20 @@
   function generateRandomMelody() {
     const minInterval = 1;
     const maxInterval = 12;
+  
+    const numNotes = 6;
+  
     const maxBase = noteList.length - maxInterval;
     const baseIndex = Math.floor(Math.random() * maxBase);
     const availableRange = noteList.slice(baseIndex, baseIndex + maxInterval + 1);
+  
     const melody = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < numNotes; i++) {
       const randomNote = availableRange[Math.floor(Math.random() * availableRange.length)];
       melody.push(randomNote);
     }
     return melody;
   }
-  
   const answerMelody = generateRandomMelody();
   const guessStartIndex = 1;
 
@@ -170,7 +173,7 @@
     const clickY = e.clientY - rect.top;
     const clickedNote = getNoteFromY(clickY);
 
-    for (let i = guessStartIndex; i < guessStartIndex + 3; i++) {
+    for (let i = guessStartIndex; i < guessStartIndex + 5; i++) {
       const slot = noteSlots[i];
       if (slot.locked) continue;
 

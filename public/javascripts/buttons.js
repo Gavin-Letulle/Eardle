@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let gameOver = false;
 
     function checkForWin() {
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 5; i++) {
           const slot = noteSlots[guessStartIndex - 1 + i];
           if (!slot || slot.color !== 'green') return false;
         }
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
         listenButton.style.backgroundColor = '#ffc74f';
         listenButton.style.cursor = 'pointer';
 
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 5; i++) {
           const slot = noteSlots[guessStartIndex - 1 + i];
           const expected = answerMelody[i];
           if (!slot.filled) continue;
