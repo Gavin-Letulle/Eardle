@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         listenLocked = false;
         listenButton.disabled = false;
-        listenButton.style.backgroundColor = '#ffc74f';
+        listenButton.style.backgroundColor = '';
         listenButton.style.cursor = 'pointer';
 
         for (let i = 1; i <= 5; i++) {
