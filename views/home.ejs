@@ -39,7 +39,7 @@
   const bottomStaffNote = 'E4';
 
   const noteSlots = [];
-  const totalSlots = 18;
+  const totalSlots = 19;
   const startX = 100 * scale;
 
   for (let i = 0; i < totalSlots; i++) {
@@ -147,23 +147,43 @@
   canvas.addEventListener('click', async (e) => {
     const isInsideContainer = document.elementFromPoint(e.clientX, e.clientY)?.closest('.music-container');
     if (!isInsideContainer) return;
-
+  
     await Tone.start();
     const rect = canvas.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
-    const note = getNoteFromY(clickY);
-
+    const clickedNote = getNoteFromY(clickY);
+  
     for (let slot of noteSlots) {
       const slotRange = noteXIncrement / 2;
-
-      if (!slot.filled && Math.abs(clickX - slot.x) < slotRange) {
+  
+      // If the click is close to this slot's X position
+      if (Math.abs(clickX - slot.x) < slotRange) {
+        // If there's already a note here
+        if (slot.filled) {
+          const noteY = getYForNote(slot.note);
+  
+          // If the user clicked near the existing note head, remove it
+          if (Math.abs(clickY - noteY) < noteRadius * 2) {
+            slot.filled = false;
+            slot.note = null;
+            drawStaff();
+            return;
+          }
+  
+          // Otherwise, update the note pitch
+          slot.note = clickedNote;
+          drawStaff();
+          synth.triggerAttackRelease(clickedNote, "8n");
+          return;
+        }
+  
+        // If empty slot, place a new note
         slot.filled = true;
-        slot.note = note;
-
+        slot.note = clickedNote;
         drawStaff();
-        synth.triggerAttackRelease(note, "8n");
-        break;
+        synth.triggerAttackRelease(clickedNote, "8n");
+        return;
       }
     }
   });
