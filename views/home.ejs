@@ -46,7 +46,21 @@
   }
 
   const synth = new Tone.Synth().toDestination();
-  const answerMelody = ['C4', 'D4', 'E4', 'C4'];
+  function generateRandomMelody() {
+    const minInterval = 1;
+    const maxInterval = 12;
+    const maxBase = noteList.length - maxInterval;
+    const baseIndex = Math.floor(Math.random() * maxBase);
+    const availableRange = noteList.slice(baseIndex, baseIndex + maxInterval + 1);
+    const melody = [];
+    for (let i = 0; i < 4; i++) {
+      const randomNote = availableRange[Math.floor(Math.random() * availableRange.length)];
+      melody.push(randomNote);
+    }
+    return melody;
+  }
+  
+  const answerMelody = generateRandomMelody();
   const guessStartIndex = 1;
 
   const clefImg = new Image();
@@ -165,7 +179,6 @@
         const previousY = previousNote ? getYForNote(previousNote) : null;
         const clickedY = getYForNote(clickedNote);
 
-        // Remove if same note clicked
         if (slot.filled && Math.abs(clickedY - previousY) < noteRadius * 2) {
           slot.filled = false;
           slot.note = null;
@@ -174,14 +187,13 @@
           return;
         }
 
-        // Update note
         slot.filled = true;
         slot.note = clickedNote;
 
         if (slot.color === 'gold' && previousNote === clickedNote && Math.abs(clickedY - previousY) < 1) {
-          slot.color = 'gold'; // keep yellow
+          slot.color = 'gold';
         } else {
-          slot.color = null;   // otherwise reset to black
+          slot.color = null;
         }
 
         drawStaff();

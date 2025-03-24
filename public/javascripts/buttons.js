@@ -8,12 +8,12 @@ document.addEventListener('DOMContentLoaded', function () {
     let gameOver = false;
 
     function checkForWin() {
-      for (let i = 0; i < 4; i++) {
-        const slot = noteSlots[guessStartIndex - 1 + i];
-        if (!slot || slot.color !== 'green') return false;
+        for (let i = 1; i <= 3; i++) {
+          const slot = noteSlots[guessStartIndex - 1 + i];
+          if (!slot || slot.color !== 'green') return false;
+        }
+        return true;
       }
-      return true;
-    }
 
     function disableButtons(win = false) {
       gameOver = true;
@@ -50,13 +50,11 @@ document.addEventListener('DOMContentLoaded', function () {
       guessButton.addEventListener('click', function () {
         if (gameOver) return;
 
-        // Unlock listen button
         listenLocked = false;
         listenButton.disabled = false;
         listenButton.style.backgroundColor = '#ffc74f';
         listenButton.style.cursor = 'pointer';
 
-        // Color guesses
         for (let i = 1; i <= 3; i++) {
           const slot = noteSlots[guessStartIndex - 1 + i];
           const expected = answerMelody[i];
@@ -73,16 +71,12 @@ document.addEventListener('DOMContentLoaded', function () {
             colorNote(slot.x, slot.note, 'red');
           }
         }
-
-        // ✅ Check for win after coloring
         setTimeout(() => {
           if (checkForWin()) {
-            triesDisplay.textContent = "🎉 You Win!";
+            triesDisplay.textContent = "You Win!";
             disableButtons(true);
             return;
           }
-
-          // Decrease tries if not won
           triesLeft--;
           if (triesLeft <= 0) {
             triesDisplay.textContent = "Game Over!";
@@ -90,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
           } else {
             triesDisplay.textContent = `Tries Left: ${triesLeft}`;
           }
-        }, 50); // slight delay ensures DOM updates finish
+        }, 50);
       });
     }
   });
