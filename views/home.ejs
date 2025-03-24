@@ -1,18 +1,19 @@
 <%- include('./partials/header') %>
-
-<h1 style="margin-top: 60px;">Guess the Melody!</h1>
-
-<div class="music-container">
-  <canvas id="staffCanvas" width="1050" height="420"></canvas>
+<div class="home">
+  <h1 style="margin-top: 60px;">Guess the Melody!</h1>
+  <button id="listen-button">
+    Listen
+  </button>
+  <div class="music-container">
+    <canvas id="staffCanvas" width="1050" height="300"></canvas>
+  </div>
 </div>
-
 <script>
   const canvas = document.getElementById('staffCanvas');
+  const musicContainer = document.querySelector('.music-container');
   const ctx = canvas.getContext('2d');
-
   const scale = 1.5;
-
-  const staffTop = 100 * scale;
+  const staffTop = 40 * scale;
   const lineSpacing = 12 * scale;
   const noteRadius = 6 * scale;
   const noteXIncrement = 30 * scale;
@@ -56,7 +57,7 @@
     const clefWidth = clefHeight * 0.65;
     const clefY = getYForNote('G4') - clefHeight * 0.56;
 
-ctx.drawImage(clefImg, 20, clefY -5, clefWidth, clefHeight);
+    ctx.drawImage(clefImg, 20, clefY - 5, clefWidth, clefHeight);
   }
 
   function getNoteFromY(y) {
@@ -115,20 +116,20 @@ ctx.drawImage(clefImg, 20, clefY -5, clefWidth, clefHeight);
       }
     }
   }
-
   const synth = new Tone.Synth().toDestination();
-
   canvas.addEventListener('click', async (e) => {
+    const isInsideContainer = document.elementFromPoint(e.clientX, e.clientY)?.closest('.music-container');
+    if (!isInsideContainer) return;
+  
     await Tone.start();
     const rect = canvas.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const note = getNoteFromY(y);
-
+  
     drawNote(noteX, note);
     noteX += noteXIncrement;
-
+  
     synth.triggerAttackRelease(note, "8n");
   });
 </script>
-
 <%- include('./partials/footer') %>
