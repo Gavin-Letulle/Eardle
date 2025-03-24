@@ -74,7 +74,7 @@ h1 {
 button{
   padding: 10px 20px;
   display: block;
-  font-size: 28px;
+  font-size: 25px;
   color: white;
   border: 2px solid black;
   border-radius: 5px;
@@ -93,19 +93,35 @@ button{
     1px  1px 0 black;
 }
 
+.home{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
 #listen-button{
   background-color: #ffc74f;
   margin-bottom: 40px;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 
 #listen-button:hover {
   background-color: #e6b244;
 }
 
-.home{
+#guess-button{
+  background-color: #ffc74f;
+}
+
+#guess-button:hover {
+  background-color: #e6b244;
+}
+
+.tries-guess {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
-  align-items: center;
+  margin-top: 40px;
+  gap: 20px;
 }
