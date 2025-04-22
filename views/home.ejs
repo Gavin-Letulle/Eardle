@@ -3,7 +3,10 @@
   <h1 style="margin-top: 60px;">Guess the Melody!</h1>
   <button id="listen-button">Listen</button>
   <div class="music-container">
-    <canvas id="staffCanvas" width="1050" height="300"></canvas>
+    <div class="staff-text">Click on the staff to place notes!</div>
+    <div class="staff-container">
+      <canvas id="staffCanvas" width="1050" height="300"></canvas>
+    </div>
   </div>
   <div class="tries-guess">
     <p style="font-size: 20px">Tries Left: 5</p>
@@ -46,6 +49,7 @@
   }
 
   const synth = new Tone.Synth().toDestination();
+
   function generateRandomMelody() {
     const minInterval = 1;
     const maxInterval = 12;
@@ -102,7 +106,8 @@
     if (y > middleLineY) {
       ctx.moveTo(x + noteRadius, y);
       ctx.lineTo(x + noteRadius, y - stemHeight);
-    } else {
+    } 
+    else {
       ctx.moveTo(x - noteRadius, y);
       ctx.lineTo(x - noteRadius, y + stemHeight);
     }
@@ -121,7 +126,8 @@
         ctx.lineTo(x + lineLength / 2, lineY);
         ctx.stroke();
       }
-    } else if (noteIndex > bottomIndex) {
+    } 
+    else if (noteIndex > bottomIndex) {
       for (let i = bottomIndex + 2; i <= noteIndex; i += 2) {
         const lineY = getYForNote(noteList[i]);
         ctx.beginPath();
@@ -195,7 +201,8 @@
 
         if (slot.color === 'gold' && previousNote === clickedNote && Math.abs(clickedY - previousY) < 1) {
           slot.color = 'gold';
-        } else {
+        } 
+        else {
           slot.color = null;
         }
 

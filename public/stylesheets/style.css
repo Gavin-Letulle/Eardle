@@ -57,6 +57,10 @@ h1 {
 
 }
 
+.staff-container{
+  flex-direction: row;
+}
+
 .music-container {
   border: 2px solid black;
   background-color: white;
@@ -64,7 +68,8 @@ h1 {
   justify-content: center;
   align-items: center;
   width: fit-content;
-  flex-direction: row;
+  flex-direction: column;
+  margin-bottom: -15px;
 }
 
 #staffCanvas {
@@ -112,6 +117,7 @@ button{
 
 #guess-button{
   background-color: #ffc74f;
+  margin-bottom: 10px;
 }
 
 #guess-button:hover {
@@ -124,4 +130,11 @@ button{
   justify-content: center;
   margin-top: 40px;
   gap: 20px;
+}
+
+.staff-text {
+  color: black;
+  font-size: 18px;
+  text-align: center;
+  margin-top: 20px;
 }

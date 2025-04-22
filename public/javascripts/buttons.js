@@ -65,9 +65,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
           if (guessIndex === answerIndex) {
             colorNote(slot.x, slot.note, 'green');
-          } else if (Math.abs(guessIndex - answerIndex) === 1) {
+          } 
+          else if (Math.abs(guessIndex - answerIndex) === 1) {
             colorNote(slot.x, slot.note, 'gold');
-          } else {
+          } 
+          else {
             colorNote(slot.x, slot.note, 'red');
           }
         }
@@ -81,7 +83,8 @@ document.addEventListener('DOMContentLoaded', function () {
           if (triesLeft <= 0) {
             triesDisplay.textContent = "Game Over!";
             disableButtons();
-          } else {
+          } 
+          else {
             triesDisplay.textContent = `Tries Left: ${triesLeft}`;
           }
         }, 50);
