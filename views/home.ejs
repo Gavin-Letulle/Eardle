@@ -125,6 +125,7 @@
     noteSlots[0].rhythmName = answerMelody[0].rhythmName;
     noteSlots[0].color = 'black';
     noteSlots[0].locked = true;
+    canvasLocked = false;
     drawStaff();
   };
 
@@ -293,6 +294,7 @@
   }
 
   canvas.addEventListener('click', async (e) => {
+    if (canvasLocked) return;
     const rect = canvas.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;

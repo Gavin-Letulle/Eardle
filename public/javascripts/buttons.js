@@ -21,42 +21,57 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
       }
 
-    function disableButtons(win = false) {
-      gameOver = true;
-      listenButton.disabled = true;
-      guessButton.disabled = true;
-      listenButton.style.cursor = 'not-allowed';
-      guessButton.style.cursor = 'not-allowed';
-
-      const color = win ? '#79e67d' : '#999';
-      listenButton.style.backgroundColor = color;
-      guessButton.style.backgroundColor = color;
-    }
+      function disableButtons(win = false) {
+        gameOver = true;
+        canvasLocked = true;
+        
+        guessButton.disabled = true;
+        guessButton.style.cursor = 'not-allowed';
+      
+        const color = win ? '#79e67d' : '#999';
+        guessButton.style.backgroundColor = color;
+      
+        // Optional: visually change Listen button if you want to signal game end
+      }
 
     if (listenButton) {
-      listenButton.addEventListener('click', async function () {
-        if (listenLocked || gameOver) return;
-
-        listenLocked = true;
-        listenButton.style.backgroundColor = '#f57979';
-        listenButton.style.cursor = 'not-allowed';
-        listenButton.disabled = true;
-
-        await Tone.start();
-
-        let currentTime = Tone.now();
-
-        for (let i = 0; i < answerMelody.length; i++) {
-        const note = answerMelody[i];
-        const toneDuration = rhythmToTone[note.rhythmName];
-        const durationInSeconds = Tone.Time(toneDuration).toSeconds();
-
-        synth.triggerAttackRelease(note.pitch, toneDuration, currentTime);
-        currentTime += durationInSeconds + 0.05; // adds 50ms of silence between notes
-        }
-
-        drawStaff();
-      });
+        listenButton.addEventListener('click', async function () {
+            if (listenLocked) return;
+          
+            listenLocked = true;
+            listenButton.style.backgroundColor = '#f57979';
+            listenButton.style.cursor = 'not-allowed';
+            listenButton.disabled = true;
+          
+            await Tone.start();
+          
+            let currentTime = Tone.now();
+            let totalDuration = 0;
+          
+            for (let i = 0; i < answerMelody.length; i++) {
+              const note = answerMelody[i];
+              const toneDuration = rhythmToTone[note.rhythmName];
+              const durationInSeconds = Tone.Time(toneDuration).toSeconds();
+          
+              synth.triggerAttackRelease(note.pitch, toneDuration, currentTime);
+              currentTime += durationInSeconds + 0.05;
+              totalDuration += durationInSeconds + 0.05;
+            }
+          
+            drawStaff();
+          
+            setTimeout(() => {
+              // Only re-enable Listen if game is over or won
+              if (gameOver) {
+                listenLocked = false;
+                listenButton.disabled = false;
+                listenButton.style.backgroundColor = '';
+                listenButton.style.cursor = 'pointer';
+                canvasLocked = true;
+              }
+            }, totalDuration * 1000);
+          });
+          
     }
 
     if (guessButton) {
@@ -103,7 +118,12 @@ document.addEventListener('DOMContentLoaded', function () {
           else {
             triesDisplay.textContent = `Tries Left: ${triesLeft}`;
           }
-        }, 50);
+          listenLocked = false;
+          listenButton.disabled = false;
+          listenButton.style.backgroundColor = '';
+          listenButton.style.cursor = 'pointer';
+        }
+        , 50);
       });
     }
   });
