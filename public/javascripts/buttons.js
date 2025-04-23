@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', function () {
     let triesLeft = 5;
     let gameOver = false;
 
+    const rhythmToTone = {
+        'eighth': '8n',
+        'quarter': '4n',
+        'half': '2n'
+      };
+
     function checkForWin() {
         for (let i = 1; i < answerMelody.length; i++) {
             const slot = noteSlots[i];
@@ -39,11 +45,14 @@ document.addEventListener('DOMContentLoaded', function () {
         await Tone.start();
 
         let currentTime = Tone.now();
+
         for (let i = 0; i < answerMelody.length; i++) {
-            const note = answerMelody[i];
-            const toneDuration = note.duration + 'n'; // '1n', '0.5n', etc.
-            synth.triggerAttackRelease(note.pitch, toneDuration, currentTime);
-            currentTime += note.duration * 1; // adjust speed of playback
+        const note = answerMelody[i];
+        const toneDuration = rhythmToTone[note.rhythmName];
+        const durationInSeconds = Tone.Time(toneDuration).toSeconds();
+
+        synth.triggerAttackRelease(note.pitch, toneDuration, currentTime);
+        currentTime += durationInSeconds + 0.05; // adds 50ms of silence between notes
         }
 
         drawStaff();

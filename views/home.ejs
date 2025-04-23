@@ -61,7 +61,15 @@
     }
   }
 
-  const synth = new Tone.Synth().toDestination();
+  const synth = new Tone.Synth({
+    envelope: {
+      attack: 0.01,
+      decay: 0.1,
+      sustain: 0.8,
+      release: 0.2 // was 0.8 — shorter so notes don't smear together
+    }
+  }).toDestination();
+  Tone.Transport.bpm.value = 75;
 
   function generateRandomMelodyWithRhythm() {
     const rhythmOptions = [
@@ -75,20 +83,28 @@
     const baseIndex = Math.floor(Math.random() * maxBase);
     const availableRange = noteList.slice(baseIndex, baseIndex + maxInterval + 1);
   
-    const melody = [];
+    let melody = [];
     let totalBeats = 0;
-    while (totalBeats < 4) {
-      const note = availableRange[Math.floor(Math.random() * availableRange.length)];
-      const possibleDurations = rhythmOptions.filter(opt => opt.value + totalBeats <= 4);
-      const duration = possibleDurations[Math.floor(Math.random() * possibleDurations.length)];
   
-      melody.push({
-        pitch: note,
-        duration: duration.value,
-        rhythmName: duration.name
-      });
+    while (true) {
+      melody = [];
+      totalBeats = 0;
   
-      totalBeats += duration.value;
+      while (totalBeats < 4) {
+        const note = availableRange[Math.floor(Math.random() * availableRange.length)];
+        const possibleDurations = rhythmOptions.filter(opt => opt.value + totalBeats <= 4);
+        const duration = possibleDurations[Math.floor(Math.random() * possibleDurations.length)];
+  
+        melody.push({
+          pitch: note,
+          duration: duration.value,
+          rhythmName: duration.name
+        });
+  
+        totalBeats += duration.value;
+      }
+  
+      if (melody.length >= 4) break; // Enforce at least 4 notes
     }
   
     return melody;
