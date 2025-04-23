@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const maxSlots = 19;
     const startX = 100 * scale;
     const noteSlots = [];
+    let ghostNote = null;
   
     function setupNoteSlots(count) {
       noteSlots.length = 0;
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       ctx.stroke();
       const noteIndex = noteList.indexOf(note);
-      
+
         const topIndex = noteList.indexOf(topStaffNote);
         const bottomIndex = noteList.indexOf(bottomStaffNote);
 
@@ -106,17 +107,70 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.stroke();
         }
         }
-      if (rhythmName === 'eighth' || rhythmName === 'sixteenth') {
-        const isStemUp = y > middleLineY;
-        const xStart = isStemUp ? x + noteRadius : x - noteRadius;
-        const yStart = isStemUp ? y - stemHeight : y + stemHeight;
-  
-        ctx.beginPath();
-        ctx.moveTo(xStart, yStart);
-        ctx.quadraticCurveTo(xStart + 10, isStemUp ? yStart + 10 : yStart - 10, xStart + 7, isStemUp ? yStart + 28 : yStart - 28);
-        ctx.stroke();
-      }
+        if (rhythmName === 'eighth' || rhythmName === 'sixteenth') {
+            const isStemUp = getYForNote(note) > getYForNote('B4');
+            const xStart = isStemUp ? x + noteRadius : x - noteRadius;
+            const yStart = isStemUp ? getYForNote(note) - stemHeight : getYForNote(note) + stemHeight;
+          
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 1.5;
+          
+            // First flag
+            ctx.beginPath();
+            ctx.moveTo(xStart, yStart);
+          
+            if (isStemUp) {
+              ctx.quadraticCurveTo(
+                xStart + 10 * scale,
+                yStart + 8 * scale,
+                xStart + 7 * scale,
+                yStart + 26 * scale
+              );
+            } else {
+              ctx.quadraticCurveTo(
+                xStart + 10 * scale,
+                yStart - 8 * scale,
+                xStart + 7 * scale,
+                yStart - 26 * scale
+              );
+            }
+          
+            ctx.stroke();
+          
+            // Second flag for sixteenth notes
+            if (rhythmName === 'sixteenth') {
+              ctx.beginPath();
+              const secondYStart = isStemUp ? yStart + 8 * scale : yStart - 8 * scale;
+              ctx.moveTo(xStart, secondYStart);
+          
+              if (isStemUp) {
+                ctx.quadraticCurveTo(
+                  xStart + 10 * scale,
+                  yStart + 18 * scale,
+                  xStart + 7 * scale,
+                  yStart + 36 * scale
+                );
+              } else {
+                ctx.quadraticCurveTo(
+                  xStart + 10 * scale,
+                  yStart - 18 * scale,
+                  xStart + 7 * scale,
+                  yStart - 36 * scale
+                );
+              }
+          
+              ctx.stroke();
+            }
+          }
+          
     }
+
+    function drawGhostNote(x, note, rhythmName = 'quarter') {
+        ctx.save();
+        ctx.globalAlpha = 0.4;
+        drawNote(x, note, rhythmName, true);
+        ctx.restore();
+      }
   
     function drawStaff() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -140,6 +194,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (slot.filled) {
           drawNote(slot.x, slot.note, slot.rhythmName);
         }
+      }
+      if (ghostNote) {
+        drawGhostNote(ghostNote.x, ghostNote.note, 'quarter');
       }
     }
   
@@ -170,6 +227,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    canvas.addEventListener('mousemove', function (e) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const hoverNote = getNoteFromY(mouseY);
+      
+        let closestSlot = null;
+        let minDist = noteXIncrement / 2;
+      
+        for (let slot of noteSlots) {
+          if (!slot.active) continue;
+          const dist = Math.abs(slot.x - mouseX);
+          if (dist < minDist) {
+            minDist = dist;
+            closestSlot = slot;
+          }
+        }
+      
+        if (closestSlot) {
+          ghostNote = {
+            x: closestSlot.x,
+            note: hoverNote,
+            rhythmName: closestSlot.rhythmName || 'quarter'
+          };
+        } else {
+          ghostNote = null;
+        }
+      
+        drawStaff();
+      });
+      
+      canvas.addEventListener('mouseleave', function () {
+        ghostNote = null;
+        drawStaff();
+      });
   
     canvas.addEventListener('contextmenu', e => {
       e.preventDefault();
