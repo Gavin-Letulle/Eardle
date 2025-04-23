@@ -1,0 +1,435 @@
+<%- include('./partials/header') %>
+<div class="home">
+  <h1 style="margin-top: 60px;">Guess the Melody!</h1>
+  <button id="listen-button">Listen</button>
+  <div class="music-container">
+    <div class="staff-text">Click on the staff to place notes!</div>
+    <div class="staff-container">
+      <canvas id="staffCanvas" width="1050" height="300"></canvas>
+    </div>
+  </div>
+  <div class="tries-guess">
+    <p style="font-size: 20px">Tries Left: 5</p>
+    <button id="guess-button">Guess</button>
+  </div>
+  <div id="rhythm-menu" style="display: none; position: absolute; background: white; border: 1px solid black; z-index: 1000;">
+    <div class="rhythm-option" data-rhythm="quarter">Quarter</div>
+    <div class="rhythm-option" data-rhythm="eighth">Eighth</div>
+    <div class="rhythm-option" data-rhythm="sixteenth">Sixteenth</div>
+    <div class="rhythm-option" data-rhythm="half">Half</div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('staffCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const scale = 1.5;
+  const staffTop = 40 * scale;
+  const lineSpacing = 12 * scale;
+  const noteRadius = 6 * scale;
+  const noteXIncrement = 30 * scale;
+  const stemHeight = 35 * scale;
+  const lineLength = 20 * scale;
+
+  const noteList = [
+    'E6', 'D6', 'C6', 'B5', 'A5', 'G5', 'F5', 'E5', 'D5', 'C5',
+    'B4', 'A4', 'G4', 'F4', 'E4', 'D4', 'C4', 'B3', 'A3', 'G3',
+    'F3', 'E3'
+  ];
+
+  const topStaffNote = 'G5';
+  const bottomStaffNote = 'E4';
+
+  const maxSlots = 19;
+  const startX = 100 * scale;
+  const noteSlots = [];
+  
+  function setupNoteSlots(melodyLength) {
+    noteSlots.length = 0; // Clear any previous
+  
+    for (let i = 0; i < maxSlots; i++) {
+      noteSlots.push({
+        x: startX + i * noteXIncrement,
+        filled: false,
+        note: null,
+        color: null,
+        locked: false,
+        rhythmName: 'quarter',
+        active: i < melodyLength // only first N slots are active
+      });
+    }
+  }
+
+  const synth = new Tone.Synth({
+    envelope: {
+      attack: 0.01,
+      decay: 0.1,
+      sustain: 0.8,
+      release: 0.2 // was 0.8 — shorter so notes don't smear together
+    }
+  }).toDestination();
+  Tone.Transport.bpm.value = 75;
+
+  function generateRandomMelodyWithRhythm() {
+    const rhythmOptions = [
+      { value: 0.5, name: 'eighth' },
+      { value: 1, name: 'quarter' },
+      { value: 2, name: 'half' }
+    ];
+  
+    const maxInterval = 12;
+    const maxBase = noteList.length - maxInterval;
+    const baseIndex = Math.floor(Math.random() * maxBase);
+    const availableRange = noteList.slice(baseIndex, baseIndex + maxInterval + 1);
+  
+    let melody = [];
+    let totalBeats = 0;
+  
+    while (true) {
+      melody = [];
+      totalBeats = 0;
+  
+      while (totalBeats < 4) {
+        const note = availableRange[Math.floor(Math.random() * availableRange.length)];
+        const possibleDurations = rhythmOptions.filter(opt => opt.value + totalBeats <= 4);
+        const duration = possibleDurations[Math.floor(Math.random() * possibleDurations.length)];
+  
+        melody.push({
+          pitch: note,
+          duration: duration.value,
+          rhythmName: duration.name
+        });
+  
+        totalBeats += duration.value;
+      }
+  
+      if (melody.length >= 4) break; // Enforce at least 4 notes
+    }
+  
+    return melody;
+  }
+
+  
+  const answerMelody = generateRandomMelodyWithRhythm();
+
+  setupNoteSlots(answerMelody.length);
+
+  const guessStartIndex = 1;
+
+  const clefImg = new Image();
+  clefImg.src = '/images/trebel-clef.webp';
+  clefImg.onload = () => {
+    noteSlots[0].filled = true;
+    noteSlots[0].note = answerMelody[0].pitch;
+    noteSlots[0].rhythmName = answerMelody[0].rhythmName;
+    noteSlots[0].color = 'black';
+    noteSlots[0].locked = true;
+    canvasLocked = false;
+    let ghostNote = null; // holds { x, note } for hover preview
+    drawStaff();
+  };
+
+  function getYForNote(note) {
+    const index = noteList.indexOf(note);
+    return staffTop + index * (lineSpacing / 2);
+  }
+
+  function getNoteFromY(y) {
+    const totalSteps = noteList.length - 1;
+    const index = Math.round((y - staffTop) / (lineSpacing / 2));
+    return noteList[Math.max(0, Math.min(totalSteps, index))];
+  }
+
+  function drawNote(x, note, rhythmName = 'quarter', transparent = false) {
+    const y = getYForNote(note);
+    const slot = noteSlots.find(s => s.x === x);
+    const fillColor = transparent ? 'rgba(0, 0, 0, 0.3)' : (slot?.color || 'black');
+
+    ctx.beginPath();
+    ctx.arc(x, y, noteRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    ctx.strokeStyle = 'black';
+    ctx.stroke();
+
+    // Add white center for half notes
+    if (rhythmName === 'half') {
+      ctx.beginPath();
+      ctx.arc(x, y, noteRadius * 0.6, 0, 2 * Math.PI);
+      ctx.fillStyle = 'white';
+      ctx.fill();
+    }
+
+    const middleLineY = getYForNote('B4');
+    ctx.beginPath();
+    if (y > middleLineY) {
+      ctx.moveTo(x + noteRadius, y);
+      ctx.lineTo(x + noteRadius, y - stemHeight);
+    } 
+    else {
+      ctx.moveTo(x - noteRadius, y);
+      ctx.lineTo(x - noteRadius, y + stemHeight);
+    }
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    const noteIndex = noteList.indexOf(note);
+    const topIndex = noteList.indexOf(topStaffNote);
+    const bottomIndex = noteList.indexOf(bottomStaffNote);
+    if (noteIndex < topIndex) {
+      for (let i = topIndex - 1; i >= noteIndex; i -= 2) {
+        const lineY = getYForNote(noteList[i]);
+        ctx.beginPath();
+        ctx.moveTo(x - lineLength / 2, lineY);
+        ctx.lineTo(x + lineLength / 2, lineY);
+        ctx.stroke();
+      }
+    } 
+    else if (noteIndex > bottomIndex) {
+      for (let i = bottomIndex + 2; i <= noteIndex; i += 2) {
+        const lineY = getYForNote(noteList[i]);
+        ctx.beginPath();
+        ctx.moveTo(x - lineLength / 2, lineY);
+        ctx.lineTo(x + lineLength / 2, lineY);
+        ctx.stroke();
+      }
+    }
+    // Draw flag for eighth or sixteenth
+    if (rhythmName === 'eighth' || rhythmName === 'sixteenth') {
+      const isStemUp = getYForNote(note) > getYForNote('B4');
+      const xStart = isStemUp ? x + noteRadius : x - noteRadius;
+      const yStart = isStemUp ? getYForNote(note) - stemHeight : getYForNote(note) + stemHeight;
+    
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 1.5;
+    
+      // First flag – modest length
+      ctx.beginPath();
+      ctx.moveTo(xStart, yStart);
+    
+      if (isStemUp) {
+        // Stem up → flag curves down and right
+        ctx.quadraticCurveTo(
+          xStart + 10 * scale,
+          yStart + 8 * scale,
+          xStart + 7 * scale,
+          yStart + 26 * scale
+        );
+      } else {
+        // Stem down → flag curves up and right
+        ctx.quadraticCurveTo(
+          xStart + 10 * scale,
+          yStart - 8 * scale,
+          xStart + 7 * scale,
+          yStart - 26 * scale
+        );
+      }
+    
+      ctx.stroke();
+    
+      // Second flag for sixteenth note – also trimmed
+      if (rhythmName === 'sixteenth') {
+        ctx.beginPath();
+        const secondYStart = isStemUp ? yStart + 8 * scale : yStart - 8 * scale;
+        ctx.moveTo(xStart, secondYStart);
+    
+        if (isStemUp) {
+          ctx.quadraticCurveTo(
+            xStart + 10 * scale,
+            yStart + 18 * scale,
+            xStart + 7 * scale,
+            yStart + 36 * scale
+          );
+        } else {
+          ctx.quadraticCurveTo(
+            xStart + 10 * scale,
+            yStart - 18 * scale,
+            xStart + 7 * scale,
+            yStart - 36 * scale
+          );
+        }
+    
+        ctx.stroke();
+      }
+    }
+    
+  }
+
+  function drawGhostNote(x, note, rhythmName = 'quarter') {
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    drawNote(x, note, rhythmName, true);
+    ctx.restore();
+  }
+
+  function colorNote(x, note, color) {
+    const slot = noteSlots.find(s => s.x === x);
+    if (slot) {
+      slot.color = color;
+      if (color === 'green') {
+        slot.locked = true;
+      }
+    }
+    drawStaff();
+  }
+
+  function drawStaff() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'black';
+
+    const topLineY = getYForNote('G5') + 5 * scale;
+    for (let i = 0; i < 5; i++) {
+      const y = topLineY + i * lineSpacing;
+      ctx.beginPath();
+      ctx.moveTo(20 * scale, y);
+      ctx.lineTo(canvas.width - 20 * scale, y);
+      ctx.stroke();
+    }
+
+    const clefScale = 1.4;
+    const clefHeight = lineSpacing * 4.5 * clefScale;
+    const clefWidth = clefHeight * 0.65;
+    const clefY = getYForNote('G4') - clefHeight * 0.56;
+    ctx.drawImage(clefImg, 20, clefY - 5, clefWidth, clefHeight);
+
+    for (let slot of noteSlots) {
+      if (slot.active && slot.filled) {
+        drawNote(slot.x, slot.note, slot.rhythmName);
+      }
+    }
+    // Draw ghost note if applicable
+    if (ghostNote) {
+      drawGhostNote(ghostNote.x, ghostNote.note, 'quarter'); // or whatever rhythm
+    }
+  }
+
+  canvas.addEventListener('click', async (e) => {
+    if (canvasLocked) return;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+    const clickedNote = getNoteFromY(clickY);
+
+    for (let i = 0; i < noteSlots.length; i++) {
+      const slot = noteSlots[i];
+      if (!slot.active || slot.locked) continue;
+    
+      if (Math.abs(clickX - slot.x) < noteXIncrement / 2) {
+        const previousNote = slot.note;
+        const previousY = previousNote ? getYForNote(previousNote) : null;
+        const clickedY = getYForNote(clickedNote);
+    
+        // Toggle to delete note if already filled and clicking close to the same note
+        if (slot.filled && Math.abs(clickedY - previousY) < noteRadius * 2) {
+          slot.filled = false;
+          slot.note = null;
+          slot.color = null;
+          drawStaff();
+          return;
+        }
+    
+        // Otherwise, place note with default rhythm
+        slot.filled = true;
+        slot.note = clickedNote;
+        slot.rhythmName = 'quarter'; // default rhythm on left-click
+    
+        // Clear color unless it's a preserved "close" color
+        if (slot.color === 'gold' && previousNote === clickedNote && Math.abs(clickedY - previousY) < 1) {
+          slot.color = 'gold';
+        } else {
+          slot.color = null;
+        }
+    
+        drawStaff();
+        synth.triggerAttackRelease(clickedNote, "8n");
+        return;
+      }
+    }
+    
+  });
+  canvas.addEventListener('mousemove', function (e) {
+    if (canvasLocked) {
+      ghostNote = null;
+      drawStaff();
+      return;
+    }
+  
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const hoverNote = getNoteFromY(mouseY);
+  
+    // Find the closest active, unlocked slot
+    let closestSlot = null;
+    let minDist = noteXIncrement / 2;
+    for (let slot of noteSlots) {
+      if (!slot.active || slot.locked) continue;
+      const dist = Math.abs(slot.x - mouseX);
+      if (dist < minDist) {
+        minDist = dist;
+        closestSlot = slot;
+      }
+    }
+  
+    if (closestSlot) {
+      ghostNote = {
+        x: closestSlot.x,
+        note: hoverNote
+      };
+    } else {
+      ghostNote = null;
+    }
+  
+    drawStaff();
+  });
+  canvas.addEventListener('mouseleave', function () {
+    ghostNote = null;
+    drawStaff();
+  });
+  
+  canvas.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+  
+    for (let i = 0; i < noteSlots.length; i++) {
+      const slot = noteSlots[i];
+      if (!slot.active || slot.locked) continue;
+  
+      const noteY = getYForNote(slot.note);
+      if (Math.abs(slot.x - clickX) < noteXIncrement / 2 &&
+          Math.abs(noteY - clickY) < noteRadius * 2) {
+  
+        showRhythmMenu(e.clientX, e.clientY, i);
+        return;
+      }
+    }
+  });
+  let rhythmTargetIndex = null;
+
+  function showRhythmMenu(x, y, slotIndex) {
+    const menu = document.getElementById('rhythm-menu');
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.style.display = 'block';
+    rhythmTargetIndex = slotIndex;
+  }
+
+  document.addEventListener('click', function (e) {
+    const menu = document.getElementById('rhythm-menu');
+    if (e.target.classList.contains('rhythm-option')) {
+      const rhythm = e.target.getAttribute('data-rhythm');
+      if (rhythmTargetIndex !== null) {
+        noteSlots[rhythmTargetIndex].rhythmName = rhythm;
+        drawStaff();
+        rhythmTargetIndex = null;
+      }
+    }
+    menu.style.display = 'none';
+  });
+</script>
+
+<%- include('./partials/footer') %>

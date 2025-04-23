@@ -124,6 +124,37 @@ button{
   background-color: #e6b244;
 }
 
+.button-row{
+  margin-top: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 70px;
+}
+
+.mode-button {
+  background-color: #ffc74f;
+  font-size: 35px;
+  padding: 10px 20px;
+  display: block;
+  color: white;
+  border: 2px solid black;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  font-family: "DynaPuff", serif;
+  text-shadow: 
+    -1px -1px 0 black,  
+    1px -1px 0 black,
+    -1px  1px 0 black,
+    1px  1px 0 black;
+  text-decoration: none;
+}
+
+.mode-button:hover {
+  background-color: #e6b244;
+}
+
 .tries-guess {
   display: flex;
   flex-direction: row;

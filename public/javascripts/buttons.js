@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const listenButton = document.getElementById("listen-button");
     const guessButton = document.getElementById("guess-button");
     const triesDisplay = document.querySelector('.tries-guess p');
+    
 
     let listenLocked = false;
     let triesLeft = 5;

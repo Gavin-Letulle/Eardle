@@ -1,0 +1,24 @@
+<%- include('./partials/header') %>
+<div class="home">
+  <h1 style="margin-top: 60px;">Familiar Mode</h1>
+  <button id="listen-button">Listen</button>
+  <div class="music-container">
+    <div class="staff-text">Click on the staff to place notes!</div>
+    <div class="staff-container">
+      <canvas id="staffCanvas" width="1050" height="300"></canvas>
+    </div>
+  </div>
+  <div class="tries-guess">
+    <p style="font-size: 20px">Tries Left: 5</p>
+    <button id="guess-button">Guess</button>
+  </div>
+  <div id="rhythm-menu" style="display: none; position: absolute; background: white; border: 1px solid black; z-index: 1000;">
+    <div class="rhythm-option" data-rhythm="quarter">Quarter</div>
+    <div class="rhythm-option" data-rhythm="eighth">Eighth</div>
+    <div class="rhythm-option" data-rhythm="sixteenth">Sixteenth</div>
+    <div class="rhythm-option" data-rhythm="half">Half</div>
+  </div>
+</div>
+
+<script src="/javascripts/familiar.js"></script>
+<%- include('./partials/footer') %>
