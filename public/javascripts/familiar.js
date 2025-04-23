@@ -23,7 +23,7 @@ const canvas = document.getElementById('staffCanvas');
   const noteSlots = [];
   
   function setupNoteSlots(melodyLength) {
-    noteSlots.length = 0; // Clear any previous
+    noteSlots.length = 0;
   
     for (let i = 0; i < maxSlots; i++) {
       noteSlots.push({
@@ -33,7 +33,7 @@ const canvas = document.getElementById('staffCanvas');
         color: null,
         locked: false,
         rhythmName: 'quarter',
-        active: i < melodyLength // only first N slots are active
+        active: i < melodyLength
       });
     }
   }
@@ -43,30 +43,107 @@ const canvas = document.getElementById('staffCanvas');
       attack: 0.01,
       decay: 0.1,
       sustain: 0.8,
-      release: 0.2 // was 0.8 — shorter so notes don't smear together
+      release: 0.2
     }
   }).toDestination();
-  Tone.Transport.bpm.value = 75;
+  Tone.Transport.bpm.value = 85;
 
   function getRandomFamiliarMelody() {
     const melodies = [
       [
+        { pitch: 'C4', duration: 1, rhythmName: 'quarter' }, // Twinkle Twinkle
+        { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'G4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'G4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'A4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'A4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'G4', duration: 2, rhythmName: 'half' }
+      ],
+
+      [
+        { pitch: 'E4', duration: 1, rhythmName: 'quarter' }, // Mary had a little lamb
+        { pitch: 'D4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'D4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'E4', duration: 1, rhythmName: 'quarter' },
-        { pitch: 'C4', duration: 1, rhythmName: 'quarter' }
+        { pitch: 'E4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'E4', duration: 2, rhythmName: 'half' }
       ],
+
       [
+        { pitch: 'C4', duration: 1, rhythmName: 'quarter' }, // Old Macdonald had a farm
+        { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'G3', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'A3', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'A3', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'G3', duration: 2, rhythmName: 'half' }
+      ],
+
+      [
+        { pitch: 'C4', duration: 1, rhythmName: 'quarter' }, // Are you sleeping
+        { pitch: 'D4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'E4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'E4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'F4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'G4', duration: 2, rhythmName: 'half' }
       ],
+
       [
-        { pitch: 'G4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'E4', duration: 1, rhythmName: 'quarter' }, // Ode to Joy
         { pitch: 'E4', duration: 1, rhythmName: 'quarter' },
-        { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'F4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'G4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'G4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'F4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'E4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'D4', duration: 1, rhythmName: 'quarter' }
+      ],
+
+      [
+        { pitch: 'A3', duration: 0.5, rhythmName: 'quarter' }, // Imperial march
+        { pitch: 'A3', duration: 0.5, rhythmName: 'quarter' },
+        { pitch: 'A3', duration: 0.5, rhythmName: 'quarter' },
+        { pitch: 'F3', duration: 0.375, rhythmName: 'quarter' },
+        { pitch: 'C4', duration: 0.125, rhythmName: 'eighth' },
+        { pitch: 'A3', duration: 1, rhythmName: 'quarter' },
+        
+        { pitch: 'F3', duration: 0.5, rhythmName: 'quarter' },
+        { pitch: 'C4', duration: 0.5, rhythmName: 'eighth' },
+        { pitch: 'A3', duration: 1, rhythmName: 'half' }
+      ],
+
+      [
+        { pitch: 'E5', duration: 0.5, rhythmName: 'eighth' }, // Mario theme
+        { pitch: 'E5', duration: 0.5, rhythmName: 'eighth' },
+        { pitch: 'E5', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'C5', duration: 0.5, rhythmName: 'eighth' },
+        { pitch: 'E5', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'G5', duration: 2, rhythmName: 'half' },
+        { pitch: 'G4', duration: 1, rhythmName: 'quarter' }
+      ],
+
+      [
+        { pitch: 'F4', duration: 2, rhythmName: 'half' }, // Simpsons theme
+        { pitch: 'A4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'B4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'D5', duration: 0.5, rhythmName: 'eighth' },
+        { pitch: 'C5', duration: 2, rhythmName: 'half' },
+        { pitch: 'A4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'F4', duration: 1, rhythmName: 'quarter' },
+      ],
+
+      [
+        { pitch: 'E4', duration: 1, rhythmName: 'quarter' }, // Tetris theme
+        { pitch: 'B3', duration: 0.5, rhythmName: 'eighth' },
+        { pitch: 'C4', duration: 0.5, rhythmName: 'eighth' },
+        { pitch: 'D4', duration: 1, rhythmName: 'quarter' },
+        { pitch: 'C4', duration: 0.5, rhythmName: 'eighth' },
+        { pitch: 'B3', duration: 0.5, rhythmName: 'eighth' },
+        { pitch: 'A3', duration: 1, rhythmName: 'quarter' }
       ]
+
     ];
     
     const selected = melodies[Math.floor(Math.random() * melodies.length)];
@@ -89,7 +166,7 @@ const canvas = document.getElementById('staffCanvas');
     noteSlots[0].color = 'black';
     noteSlots[0].locked = true;
     canvasLocked = false;
-    let ghostNote = null; // holds { x, note } for hover preview
+    let ghostNote = null;
     drawStaff();
   };
 
@@ -116,7 +193,6 @@ const canvas = document.getElementById('staffCanvas');
     ctx.strokeStyle = 'black';
     ctx.stroke();
 
-    // Add white center for half notes
     if (rhythmName === 'half') {
       ctx.beginPath();
       ctx.arc(x, y, noteRadius * 0.6, 0, 2 * Math.PI);
@@ -159,7 +235,7 @@ const canvas = document.getElementById('staffCanvas');
         ctx.stroke();
       }
     }
-    // Draw flag for eighth or sixteenth
+
     if (rhythmName === 'eighth' || rhythmName === 'sixteenth') {
       const isStemUp = getYForNote(note) > getYForNote('B4');
       const xStart = isStemUp ? x + noteRadius : x - noteRadius;
@@ -167,13 +243,11 @@ const canvas = document.getElementById('staffCanvas');
     
       ctx.strokeStyle = 'black';
       ctx.lineWidth = 1.5;
-    
-      // First flag – modest length
+
       ctx.beginPath();
       ctx.moveTo(xStart, yStart);
     
       if (isStemUp) {
-        // Stem up → flag curves down and right
         ctx.quadraticCurveTo(
           xStart + 10 * scale,
           yStart + 8 * scale,
@@ -181,7 +255,6 @@ const canvas = document.getElementById('staffCanvas');
           yStart + 26 * scale
         );
       } else {
-        // Stem down → flag curves up and right
         ctx.quadraticCurveTo(
           xStart + 10 * scale,
           yStart - 8 * scale,
@@ -192,7 +265,6 @@ const canvas = document.getElementById('staffCanvas');
     
       ctx.stroke();
     
-      // Second flag for sixteenth note – also trimmed
       if (rhythmName === 'sixteenth') {
         ctx.beginPath();
         const secondYStart = isStemUp ? yStart + 8 * scale : yStart - 8 * scale;
@@ -262,9 +334,8 @@ const canvas = document.getElementById('staffCanvas');
         drawNote(slot.x, slot.note, slot.rhythmName);
       }
     }
-    // Draw ghost note if applicable
     if (ghostNote) {
-      drawGhostNote(ghostNote.x, ghostNote.note, 'quarter'); // or whatever rhythm
+      drawGhostNote(ghostNote.x, ghostNote.note, 'quarter');
     }
   }
 
@@ -284,7 +355,6 @@ const canvas = document.getElementById('staffCanvas');
         const previousY = previousNote ? getYForNote(previousNote) : null;
         const clickedY = getYForNote(clickedNote);
     
-        // Toggle to delete note if already filled and clicking close to the same note
         if (slot.filled && Math.abs(clickedY - previousY) < noteRadius * 2) {
           slot.filled = false;
           slot.note = null;
@@ -293,12 +363,10 @@ const canvas = document.getElementById('staffCanvas');
           return;
         }
     
-        // Otherwise, place note with default rhythm
         slot.filled = true;
         slot.note = clickedNote;
-        slot.rhythmName = 'quarter'; // default rhythm on left-click
+        slot.rhythmName = 'quarter';
     
-        // Clear color unless it's a preserved "close" color
         if (slot.color === 'gold' && previousNote === clickedNote && Math.abs(clickedY - previousY) < 1) {
           slot.color = 'gold';
         } else {
@@ -324,7 +392,6 @@ const canvas = document.getElementById('staffCanvas');
     const mouseY = e.clientY - rect.top;
     const hoverNote = getNoteFromY(mouseY);
   
-    // Find the closest active, unlocked slot
     let closestSlot = null;
     let minDist = noteXIncrement / 2;
     for (let slot of noteSlots) {

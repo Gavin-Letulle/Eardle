@@ -115,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.strokeStyle = 'black';
             ctx.lineWidth = 1.5;
           
-            // First flag
             ctx.beginPath();
             ctx.moveTo(xStart, yStart);
           
@@ -137,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
           
             ctx.stroke();
           
-            // Second flag for sixteenth notes
             if (rhythmName === 'sixteenth') {
               ctx.beginPath();
               const secondYStart = isStemUp ? yStart + 8 * scale : yStart - 8 * scale;
@@ -305,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   
     listenButton.addEventListener('click', async () => {
-        listenButton.disabled = false; // reset in case it was disabled by something
+        listenButton.disabled = false;
         listenButton.style.cursor = 'pointer';
       
         await Tone.start();

@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const color = win ? '#79e67d' : '#999';
         guessButton.style.backgroundColor = color;
       
-        // Optional: visually change Listen button if you want to signal game end
       }
 
     if (listenButton) {
@@ -62,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function () {
             drawStaff();
           
             setTimeout(() => {
-              // Only re-enable Listen if game is over or won
               if (gameOver) {
                 listenLocked = false;
                 listenButton.disabled = false;
