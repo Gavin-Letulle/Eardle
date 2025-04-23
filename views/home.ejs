@@ -12,6 +12,12 @@
     <p style="font-size: 20px">Tries Left: 5</p>
     <button id="guess-button">Guess</button>
   </div>
+  <div id="rhythm-menu" style="display: none; position: absolute; background: white; border: 1px solid black; z-index: 1000;">
+    <div class="rhythm-option" data-rhythm="quarter">Quarter</div>
+    <div class="rhythm-option" data-rhythm="eighth">Eighth</div>
+    <div class="rhythm-option" data-rhythm="sixteenth">Sixteenth</div>
+    <div class="rhythm-option" data-rhythm="half">Half</div>
+  </div>
 </div>
 
 <script>
@@ -35,48 +41,74 @@
   const topStaffNote = 'G5';
   const bottomStaffNote = 'E4';
 
-  const noteSlots = [];
-  const totalSlots = 19;
+  const maxSlots = 19;
   const startX = 100 * scale;
-  for (let i = 0; i < totalSlots; i++) {
-    noteSlots.push({
-      x: startX + i * noteXIncrement,
-      filled: false,
-      note: null,
-      color: null,
-      locked: false
-    });
+  const noteSlots = [];
+  
+  function setupNoteSlots(melodyLength) {
+    noteSlots.length = 0; // Clear any previous
+  
+    for (let i = 0; i < maxSlots; i++) {
+      noteSlots.push({
+        x: startX + i * noteXIncrement,
+        filled: false,
+        note: null,
+        color: null,
+        locked: false,
+        rhythmName: 'quarter',
+        active: i < melodyLength // only first N slots are active
+      });
+    }
   }
 
   const synth = new Tone.Synth().toDestination();
 
-  function generateRandomMelody() {
-    const minInterval = 1;
+  function generateRandomMelodyWithRhythm() {
+    const rhythmOptions = [
+      { value: 0.5, name: 'eighth' },
+      { value: 1, name: 'quarter' },
+      { value: 2, name: 'half' }
+    ];
+  
     const maxInterval = 12;
-  
-    const numNotes = 6;
-  
     const maxBase = noteList.length - maxInterval;
     const baseIndex = Math.floor(Math.random() * maxBase);
     const availableRange = noteList.slice(baseIndex, baseIndex + maxInterval + 1);
   
     const melody = [];
-    for (let i = 0; i < numNotes; i++) {
-      const randomNote = availableRange[Math.floor(Math.random() * availableRange.length)];
-      melody.push(randomNote);
+    let totalBeats = 0;
+    while (totalBeats < 4) {
+      const note = availableRange[Math.floor(Math.random() * availableRange.length)];
+      const possibleDurations = rhythmOptions.filter(opt => opt.value + totalBeats <= 4);
+      const duration = possibleDurations[Math.floor(Math.random() * possibleDurations.length)];
+  
+      melody.push({
+        pitch: note,
+        duration: duration.value,
+        rhythmName: duration.name
+      });
+  
+      totalBeats += duration.value;
     }
+  
     return melody;
   }
-  const answerMelody = generateRandomMelody();
+
+  
+  const answerMelody = generateRandomMelodyWithRhythm();
+
+  setupNoteSlots(answerMelody.length);
+
   const guessStartIndex = 1;
 
   const clefImg = new Image();
   clefImg.src = '/images/trebel-clef.webp';
   clefImg.onload = () => {
-    noteSlots[guessStartIndex - 1].filled = true;
-    noteSlots[guessStartIndex - 1].note = answerMelody[0];
-    noteSlots[guessStartIndex - 1].color = 'black';
-    noteSlots[guessStartIndex - 1].locked = true;
+    noteSlots[0].filled = true;
+    noteSlots[0].note = answerMelody[0].pitch;
+    noteSlots[0].rhythmName = answerMelody[0].rhythmName;
+    noteSlots[0].color = 'black';
+    noteSlots[0].locked = true;
     drawStaff();
   };
 
@@ -91,7 +123,7 @@
     return noteList[Math.max(0, Math.min(totalSteps, index))];
   }
 
-  function drawNote(x, note) {
+  function drawNote(x, note, rhythmName = 'quarter') {
     const y = getYForNote(note);
     const slot = noteSlots.find(s => s.x === x);
     const fillColor = slot?.color || 'black';
@@ -100,6 +132,16 @@
     ctx.arc(x, y, noteRadius, 0, 2 * Math.PI);
     ctx.fillStyle = fillColor;
     ctx.fill();
+    ctx.strokeStyle = 'black';
+    ctx.stroke();
+
+    // Add white center for half notes
+    if (rhythmName === 'half') {
+      ctx.beginPath();
+      ctx.arc(x, y, noteRadius * 0.6, 0, 2 * Math.PI);
+      ctx.fillStyle = 'white';
+      ctx.fill();
+    }
 
     const middleLineY = getYForNote('B4');
     ctx.beginPath();
@@ -136,6 +178,65 @@
         ctx.stroke();
       }
     }
+    // Draw flag for eighth or sixteenth
+    if (rhythmName === 'eighth' || rhythmName === 'sixteenth') {
+      const isStemUp = getYForNote(note) > getYForNote('B4');
+      const xStart = isStemUp ? x + noteRadius : x - noteRadius;
+      const yStart = isStemUp ? getYForNote(note) - stemHeight : getYForNote(note) + stemHeight;
+    
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 1.5;
+    
+      // First flag – modest length
+      ctx.beginPath();
+      ctx.moveTo(xStart, yStart);
+    
+      if (isStemUp) {
+        // Stem up → flag curves down and right
+        ctx.quadraticCurveTo(
+          xStart + 10 * scale,
+          yStart + 8 * scale,
+          xStart + 7 * scale,
+          yStart + 26 * scale
+        );
+      } else {
+        // Stem down → flag curves up and right
+        ctx.quadraticCurveTo(
+          xStart + 10 * scale,
+          yStart - 8 * scale,
+          xStart + 7 * scale,
+          yStart - 26 * scale
+        );
+      }
+    
+      ctx.stroke();
+    
+      // Second flag for sixteenth note – also trimmed
+      if (rhythmName === 'sixteenth') {
+        ctx.beginPath();
+        const secondYStart = isStemUp ? yStart + 8 * scale : yStart - 8 * scale;
+        ctx.moveTo(xStart, secondYStart);
+    
+        if (isStemUp) {
+          ctx.quadraticCurveTo(
+            xStart + 10 * scale,
+            yStart + 18 * scale,
+            xStart + 7 * scale,
+            yStart + 36 * scale
+          );
+        } else {
+          ctx.quadraticCurveTo(
+            xStart + 10 * scale,
+            yStart - 18 * scale,
+            xStart + 7 * scale,
+            yStart - 36 * scale
+          );
+        }
+    
+        ctx.stroke();
+      }
+    }
+    
   }
 
   function colorNote(x, note, color) {
@@ -169,7 +270,9 @@
     ctx.drawImage(clefImg, 20, clefY - 5, clefWidth, clefHeight);
 
     for (let slot of noteSlots) {
-      if (slot.filled) drawNote(slot.x, slot.note);
+      if (slot.active && slot.filled) {
+        drawNote(slot.x, slot.note, slot.rhythmName);
+      }
     }
   }
 
@@ -179,15 +282,16 @@
     const clickY = e.clientY - rect.top;
     const clickedNote = getNoteFromY(clickY);
 
-    for (let i = guessStartIndex; i < guessStartIndex + 5; i++) {
+    for (let i = 0; i < noteSlots.length; i++) {
       const slot = noteSlots[i];
-      if (slot.locked) continue;
-
+      if (!slot.active || slot.locked) continue;
+    
       if (Math.abs(clickX - slot.x) < noteXIncrement / 2) {
         const previousNote = slot.note;
         const previousY = previousNote ? getYForNote(previousNote) : null;
         const clickedY = getYForNote(clickedNote);
-
+    
+        // Toggle to delete note if already filled and clicking close to the same note
         if (slot.filled && Math.abs(clickedY - previousY) < noteRadius * 2) {
           slot.filled = false;
           slot.note = null;
@@ -195,22 +299,66 @@
           drawStaff();
           return;
         }
-
+    
+        // Otherwise, place note with default rhythm
         slot.filled = true;
         slot.note = clickedNote;
-
+        slot.rhythmName = 'quarter'; // default rhythm on left-click
+    
+        // Clear color unless it's a preserved "close" color
         if (slot.color === 'gold' && previousNote === clickedNote && Math.abs(clickedY - previousY) < 1) {
           slot.color = 'gold';
-        } 
-        else {
+        } else {
           slot.color = null;
         }
-
+    
         drawStaff();
         synth.triggerAttackRelease(clickedNote, "8n");
         return;
       }
     }
+    
+  });
+  canvas.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+  
+    for (let i = 0; i < noteSlots.length; i++) {
+      const slot = noteSlots[i];
+      if (!slot.active || slot.locked) continue;
+  
+      const noteY = getYForNote(slot.note);
+      if (Math.abs(slot.x - clickX) < noteXIncrement / 2 &&
+          Math.abs(noteY - clickY) < noteRadius * 2) {
+  
+        showRhythmMenu(e.clientX, e.clientY, i);
+        return;
+      }
+    }
+  });
+  let rhythmTargetIndex = null;
+
+  function showRhythmMenu(x, y, slotIndex) {
+    const menu = document.getElementById('rhythm-menu');
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.style.display = 'block';
+    rhythmTargetIndex = slotIndex;
+  }
+
+  document.addEventListener('click', function (e) {
+    const menu = document.getElementById('rhythm-menu');
+    if (e.target.classList.contains('rhythm-option')) {
+      const rhythm = e.target.getAttribute('data-rhythm');
+      if (rhythmTargetIndex !== null) {
+        noteSlots[rhythmTargetIndex].rhythmName = rhythm;
+        drawStaff();
+        rhythmTargetIndex = null;
+      }
+    }
+    menu.style.display = 'none';
   });
 </script>
 

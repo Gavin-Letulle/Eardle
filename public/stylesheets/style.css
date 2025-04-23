@@ -138,3 +138,14 @@ button{
   text-align: center;
   margin-top: 20px;
 }
+
+#rhythm-menu {
+  font-size: 14px;
+  cursor: pointer;
+}
+#rhythm-menu .rhythm-option {
+  padding: 5px 10px;
+}
+#rhythm-menu .rhythm-option:hover {
+  background-color: #eee;
+}

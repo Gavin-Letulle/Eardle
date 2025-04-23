@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', function () {
     let gameOver = false;
 
     function checkForWin() {
-        for (let i = 1; i <= 5; i++) {
-          const slot = noteSlots[guessStartIndex - 1 + i];
-          if (!slot || slot.color !== 'green') return false;
-        }
+        for (let i = 1; i < answerMelody.length; i++) {
+            const slot = noteSlots[i];
+            if (!slot || slot.color !== 'green') return false;
+          }
         return true;
       }
 
@@ -38,8 +38,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         await Tone.start();
 
+        let currentTime = Tone.now();
         for (let i = 0; i < answerMelody.length; i++) {
-          synth.triggerAttackRelease(answerMelody[i], '8n', Tone.now() + i * 0.5);
+            const note = answerMelody[i];
+            const toneDuration = note.duration + 'n'; // '1n', '0.5n', etc.
+            synth.triggerAttackRelease(note.pitch, toneDuration, currentTime);
+            currentTime += note.duration * 1; // adjust speed of playback
         }
 
         drawStaff();
@@ -55,24 +59,27 @@ document.addEventListener('DOMContentLoaded', function () {
         listenButton.style.backgroundColor = '';
         listenButton.style.cursor = 'pointer';
 
-        for (let i = 1; i <= 5; i++) {
-          const slot = noteSlots[guessStartIndex - 1 + i];
-          const expected = answerMelody[i];
-          if (!slot.filled) continue;
-
-          const guessIndex = noteList.indexOf(slot.note);
-          const answerIndex = noteList.indexOf(expected);
-
-          if (guessIndex === answerIndex) {
-            colorNote(slot.x, slot.note, 'green');
-          } 
-          else if (Math.abs(guessIndex - answerIndex) === 1) {
-            colorNote(slot.x, slot.note, 'gold');
-          } 
-          else {
-            colorNote(slot.x, slot.note, 'red');
+        for (let i = 1; i < answerMelody.length; i++) {
+            const slot = noteSlots[i];
+            const expected = answerMelody[i];
+            if (!slot || !slot.filled) continue;
+          
+            const guessPitchIndex = noteList.indexOf(slot.note);
+            const expectedPitchIndex = noteList.indexOf(expected.pitch);
+            const pitchCorrect = guessPitchIndex === expectedPitchIndex;
+            const pitchClose = Math.abs(guessPitchIndex - expectedPitchIndex) === 1;
+            const rhythmCorrect = slot.rhythmName === expected.rhythmName;
+          
+            if (pitchCorrect && rhythmCorrect) {
+              colorNote(slot.x, slot.note, 'green');
+            } else if (pitchCorrect) {
+              colorNote(slot.x, slot.note, 'blue');
+            } else if (pitchClose) {
+              colorNote(slot.x, slot.note, 'gold');
+            } else {
+              colorNote(slot.x, slot.note, 'red');
+            }
           }
-        }
         setTimeout(() => {
           if (checkForWin()) {
             triesDisplay.textContent = "You Win!";
