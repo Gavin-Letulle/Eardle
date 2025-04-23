@@ -126,6 +126,7 @@
     noteSlots[0].color = 'black';
     noteSlots[0].locked = true;
     canvasLocked = false;
+    let ghostNote = null; // holds { x, note } for hover preview
     drawStaff();
   };
 
@@ -140,10 +141,10 @@
     return noteList[Math.max(0, Math.min(totalSteps, index))];
   }
 
-  function drawNote(x, note, rhythmName = 'quarter') {
+  function drawNote(x, note, rhythmName = 'quarter', transparent = false) {
     const y = getYForNote(note);
     const slot = noteSlots.find(s => s.x === x);
-    const fillColor = slot?.color || 'black';
+    const fillColor = transparent ? 'rgba(0, 0, 0, 0.3)' : (slot?.color || 'black');
 
     ctx.beginPath();
     ctx.arc(x, y, noteRadius, 0, 2 * Math.PI);
@@ -256,6 +257,13 @@
     
   }
 
+  function drawGhostNote(x, note, rhythmName = 'quarter') {
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    drawNote(x, note, rhythmName, true);
+    ctx.restore();
+  }
+
   function colorNote(x, note, color) {
     const slot = noteSlots.find(s => s.x === x);
     if (slot) {
@@ -290,6 +298,10 @@
       if (slot.active && slot.filled) {
         drawNote(slot.x, slot.note, slot.rhythmName);
       }
+    }
+    // Draw ghost note if applicable
+    if (ghostNote) {
+      drawGhostNote(ghostNote.x, ghostNote.note, 'quarter'); // or whatever rhythm
     }
   }
 
@@ -337,6 +349,46 @@
     }
     
   });
+  canvas.addEventListener('mousemove', function (e) {
+    if (canvasLocked) {
+      ghostNote = null;
+      drawStaff();
+      return;
+    }
+  
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const hoverNote = getNoteFromY(mouseY);
+  
+    // Find the closest active, unlocked slot
+    let closestSlot = null;
+    let minDist = noteXIncrement / 2;
+    for (let slot of noteSlots) {
+      if (!slot.active || slot.locked) continue;
+      const dist = Math.abs(slot.x - mouseX);
+      if (dist < minDist) {
+        minDist = dist;
+        closestSlot = slot;
+      }
+    }
+  
+    if (closestSlot) {
+      ghostNote = {
+        x: closestSlot.x,
+        note: hoverNote
+      };
+    } else {
+      ghostNote = null;
+    }
+  
+    drawStaff();
+  });
+  canvas.addEventListener('mouseleave', function () {
+    ghostNote = null;
+    drawStaff();
+  });
+  
   canvas.addEventListener('contextmenu', function (e) {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
