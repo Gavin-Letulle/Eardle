@@ -124,6 +124,16 @@ button{
   background-color: #e6b244;
 }
 
+#sandbox-listen-button{
+  background-color: #ffc74f;
+  margin-bottom: 40px;
+  margin-top: 5px;
+}
+
+#sandbox-listen-button:hover {
+  background-color: #e6b244;
+}
+
 .button-row{
   margin-top: 20px;
   display: flex;
