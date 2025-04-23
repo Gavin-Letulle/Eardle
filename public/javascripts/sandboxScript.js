@@ -205,26 +205,28 @@ document.addEventListener('DOMContentLoaded', () => {
       drawStaff();
     };
   
-    canvas.addEventListener('click', e => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const note = getNoteFromY(y);
-  
-      for (let slot of noteSlots) {
-        if (Math.abs(slot.x - x) < noteXIncrement / 2) {
-          if (slot.filled && slot.note === note) {
-            slot.filled = false;
-            slot.note = null;
-          } else {
-            slot.filled = true;
-            slot.note = note;
+    canvas.addEventListener('click', async e => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const note = getNoteFromY(y);
+      
+        for (let slot of noteSlots) {
+          if (Math.abs(slot.x - x) < noteXIncrement / 2) {
+            if (slot.filled && slot.note === note) {
+              slot.filled = false;
+              slot.note = null;
+            } else {
+              slot.filled = true;
+              slot.note = note;
+              await Tone.start();
+              synth.triggerAttackRelease(note, '8n');
+            }
+            drawStaff();
+            return;
           }
-          drawStaff();
-          return;
         }
-      }
-    });
+      });
 
     canvas.addEventListener('mousemove', function (e) {
         const rect = canvas.getBoundingClientRect();
