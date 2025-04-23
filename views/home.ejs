@@ -4,7 +4,8 @@
     <div class="button-row">
         <a href="/classic" class="mode-button">Classic</a>
         <a href="/familiar" class="mode-button">Familiar</a>
-      </div>
+    </div>
+    <a href="/sandbox" class="mode-button" style="margin-top: 40px">Sandbox</a>
 </div>
 <%- include('./partials/footer') %>
 
@@ -16,4 +17,8 @@
     document.getElementById("familiar-button").addEventListener("click", function () {
       window.location.href = "/familiar";
     });
-  </script>
+
+    document.getElementById("sandbox-button").addEventListener("click", function () {
+        window.location.href = "/sandbox";
+      });
+</script>
