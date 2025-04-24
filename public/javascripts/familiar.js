@@ -51,7 +51,7 @@ const canvas = document.getElementById('staffCanvas');
   function getRandomFamiliarMelody() {
     const melodies = [
       [
-        { pitch: 'C4', duration: 1, rhythmName: 'quarter' }, // Twinkle Twinkle
+        { pitch: 'C4', duration: 1, rhythmName: 'quarter' }, //Twinkle Twinkle
         { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'G4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'G4', duration: 1, rhythmName: 'quarter' },
@@ -61,7 +61,7 @@ const canvas = document.getElementById('staffCanvas');
       ],
 
       [
-        { pitch: 'E4', duration: 1, rhythmName: 'quarter' }, // Mary had a little lamb
+        { pitch: 'E4', duration: 1, rhythmName: 'quarter' }, //Mary had a little lamb
         { pitch: 'D4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'D4', duration: 1, rhythmName: 'quarter' },
@@ -71,7 +71,7 @@ const canvas = document.getElementById('staffCanvas');
       ],
 
       [
-        { pitch: 'C4', duration: 1, rhythmName: 'quarter' }, // Old Macdonald had a farm
+        { pitch: 'C4', duration: 1, rhythmName: 'quarter' }, //Old Macdonald had a farm
         { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'G3', duration: 1, rhythmName: 'quarter' },
@@ -81,7 +81,7 @@ const canvas = document.getElementById('staffCanvas');
       ],
 
       [
-        { pitch: 'C4', duration: 1, rhythmName: 'quarter' }, // Are you sleeping
+        { pitch: 'C4', duration: 1, rhythmName: 'quarter' }, //Are you sleeping
         { pitch: 'D4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'E4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'C4', duration: 1, rhythmName: 'quarter' },
@@ -91,7 +91,7 @@ const canvas = document.getElementById('staffCanvas');
       ],
 
       [
-        { pitch: 'E4', duration: 1, rhythmName: 'quarter' }, // Ode to Joy
+        { pitch: 'E4', duration: 1, rhythmName: 'quarter' }, //Ode to Joy
         { pitch: 'E4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'F4', duration: 1, rhythmName: 'quarter' },
         { pitch: 'G4', duration: 1, rhythmName: 'quarter' },
@@ -102,7 +102,7 @@ const canvas = document.getElementById('staffCanvas');
       ],
 
       [
-        { pitch: 'A3', duration: 0.5, rhythmName: 'quarter' }, // Imperial march
+        { pitch: 'A3', duration: 0.5, rhythmName: 'quarter' }, //Imperial march
         { pitch: 'A3', duration: 0.5, rhythmName: 'quarter' },
         { pitch: 'A3', duration: 0.5, rhythmName: 'quarter' },
         { pitch: 'F3', duration: 0.375, rhythmName: 'quarter' },
@@ -115,7 +115,7 @@ const canvas = document.getElementById('staffCanvas');
       ],
 
       [
-        { pitch: 'E5', duration: 0.5, rhythmName: 'eighth' }, // Mario theme
+        { pitch: 'E5', duration: 0.5, rhythmName: 'eighth' }, //Mario theme
         { pitch: 'E5', duration: 0.5, rhythmName: 'eighth' },
         { pitch: 'E5', duration: 1, rhythmName: 'quarter' },
         { pitch: 'C5', duration: 0.5, rhythmName: 'eighth' },
