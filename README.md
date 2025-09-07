@@ -36,12 +36,12 @@ Select a mode:
 - Right-click a note to change its rhythmic value.
 - When ready, click Listen to hear your creation!
 
-##### Tech Stack
+### Tech Stack
 - Node.js – server runtime
 - Express.js – backend framework
 - EJS – templating engine
 - Tone.js – audio synthesis & playback
 - JavaScript, HTML, CSS – frontend
 
-##### Author
+### Author
 Built by Gavin Letulle
